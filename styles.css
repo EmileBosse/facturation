@@ -95,15 +95,43 @@ input:focus, textarea:focus {
 .row { display: flex; gap: 10px; }
 .row > label { flex: 1; }
 
+/* ---------- Zone d'import du logo ---------- */
+.logo-zone {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px;
+  margin-bottom: 12px;
+  border: 1px dashed var(--line);
+  border-radius: 8px;
+  background: #f8fafc;
+}
+.logo-zone img {
+  width: 56px;
+  height: 56px;
+  object-fit: contain;
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+}
+.logo-boutons { display: flex; gap: 6px; flex-wrap: wrap; }
+/* Un <label> stylisé en bouton : cliquer dessus ouvre l'input file caché */
+.logo-boutons label.btn { margin: 0; color: var(--ink); }
+
 /* ---------- Une ligne d'article dans le formulaire ---------- */
 .ligne {
   display: grid;
   grid-template-columns: 1fr 60px 80px 32px;
   gap: 6px;
   margin-bottom: 6px;
-  align-items: center;
+  align-items: start; /* start : la description peut grandir sans étirer le reste */
 }
-.ligne input { margin-top: 0; }
+.ligne input, .ligne textarea { margin-top: 0; }
+.ligne textarea {
+  min-height: 34px;
+  line-height: 1.35;
+  overflow: hidden; /* la hauteur est ajustée en JS */
+}
 .ligne .supprimer {
   border: none;
   background: #fee2e2;
@@ -130,9 +158,10 @@ input:focus, textarea:focus {
 .btn.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
 .btn.primary:hover { filter: brightness(1.08); }
 .btn.ghost { background: transparent; border-color: #334155; color: #fff; }
+.btn.ghost-dark { background: transparent; border-color: var(--line); color: var(--muted); }
 
-.actions { display: flex; gap: 8px; margin-top: 18px; }
-.actions .btn { flex: 1; }
+.actions { display: flex; gap: 8px; margin-top: 18px; flex-wrap: wrap; }
+.actions .btn { flex: 1 1 130px; }
 
 /* ============================================================
    L'APERÇU DE LA FACTURE
@@ -158,6 +187,12 @@ input:focus, textarea:focus {
   border-bottom: 3px solid var(--ink);
   padding-bottom: 10px;
 }
+.f-head-gauche { display: flex; align-items: flex-end; gap: 14px; }
+.f-logo {
+  max-width: 130px;
+  max-height: 70px;
+  object-fit: contain;
+}
 .f-titre { font-size: 30px; font-weight: 800; letter-spacing: .06em; }
 .f-num { color: var(--muted); margin-top: 2px; }
 .f-date { color: var(--muted); }
@@ -177,6 +212,12 @@ input:focus, textarea:focus {
 }
 .f-nom { font-weight: 700; font-size: 14px; }
 .f-infos { color: #334155; white-space: pre-line; } /* pre-line = respecte les retours à la ligne */
+.f-taxes-no {
+  margin-top: 6px;
+  font-size: 10px;
+  color: var(--muted);
+  white-space: pre-line;
+}
 
 .f-table { width: 100%; border-collapse: collapse; margin-top: 8px; }
 .f-table th {
@@ -188,7 +229,8 @@ input:focus, textarea:focus {
   letter-spacing: .06em;
   color: var(--muted);
 }
-.f-table td { padding: 7px 8px; border-bottom: 1px solid var(--line); }
+.f-table td { padding: 7px 8px; border-bottom: 1px solid var(--line); vertical-align: top; }
+.f-table td:first-child { white-space: pre-line; } /* multi-lignes dans la description */
 .f-table .num { text-align: right; }
 
 .f-totaux {

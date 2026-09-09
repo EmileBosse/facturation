@@ -14,8 +14,11 @@
 // Règle d'or : on modifie l'état, puis on appelle rendre().
 // -----------------------------------------------------------
 let facture = {
+  logo: '',            // image du logo encodée en texte (data URL), ou '' si aucun
   emetteurNom: '',
   emetteurInfos: '',
+  noTps: '',           // numéro d'inscription TPS
+  noTvq: '',           // numéro d'inscription TVQ
   clientNom: '',
   clientInfos: '',
   numero: 'F-0001',
@@ -51,6 +54,12 @@ function calculer() {
   return { sousTotal, mtTps, mtTvq, total: sousTotal + mtTps + mtTvq };
 }
 
+/** Ajuste la hauteur d'un textarea à son contenu. */
+function ajusterHauteur(textarea) {
+  textarea.style.height = 'auto';
+  textarea.style.height = textarea.scrollHeight + 'px';
+}
+
 /** Redessine les champs de lignes dans le formulaire. */
 function rendreFormulaireLignes() {
   const conteneur = $('#lignes');
@@ -59,25 +68,33 @@ function rendreFormulaireLignes() {
   facture.lignes.forEach((ligne, index) => {
     const div = document.createElement('div');
     div.className = 'ligne';
+    // La description est un <textarea> : texte libre sur plusieurs lignes.
     div.innerHTML = `
-      <input type="text"   placeholder="Description" data-ligne="${index}" data-prop="description">
+      <textarea rows="1" placeholder="Description" data-ligne="${index}" data-prop="description"></textarea>
       <input type="number" placeholder="Qté"  step="0.01" data-ligne="${index}" data-prop="quantite">
       <input type="number" placeholder="Prix" step="0.01" data-ligne="${index}" data-prop="prix">
       <button class="supprimer" type="button" data-supprimer="${index}" title="Supprimer">&times;</button>
     `;
     // On assigne les valeurs en JS (et non dans le HTML) pour éviter
     // tout problème de caractères spéciaux dans le texte saisi.
-    div.querySelector('[data-prop="description"]').value = ligne.description;
+    const desc = div.querySelector('[data-prop="description"]');
+    desc.value = ligne.description;
     div.querySelector('[data-prop="quantite"]').value = ligne.quantite;
     div.querySelector('[data-prop="prix"]').value = ligne.prix;
 
     conteneur.appendChild(div);
+    ajusterHauteur(desc); // après insertion : scrollHeight est alors mesurable
   });
 }
 
 /** Met à jour l'aperçu de la facture (colonne de droite). */
 function rendreApercu() {
   const t = calculer();
+
+  // Logo : on l'affiche seulement s'il y en a un
+  const logo = $('#p-logo');
+  logo.hidden = !facture.logo;
+  if (facture.logo) logo.src = facture.logo;
 
   $('#p-numero').textContent = facture.numero || '—';
   $('#p-date').textContent = facture.date
@@ -86,6 +103,13 @@ function rendreApercu() {
 
   $('#p-emetteurNom').textContent = facture.emetteurNom || '—';
   $('#p-emetteurInfos').textContent = facture.emetteurInfos;
+
+  // Numéros de taxes : on ne montre que ceux qui sont remplis
+  $('#p-nosTaxes').textContent = [
+    facture.noTps && `TPS : ${facture.noTps}`,
+    facture.noTvq && `TVQ : ${facture.noTvq}`
+  ].filter(Boolean).join('\n');
+
   $('#p-clientNom').textContent = facture.clientNom || '—';
   $('#p-clientInfos').textContent = facture.clientInfos;
 
@@ -138,6 +162,7 @@ $('#lignes').addEventListener('input', (e) => {
   const index = e.target.dataset.ligne;
   if (index === undefined) return;
   facture.lignes[index][e.target.dataset.prop] = e.target.value;
+  if (e.target.tagName === 'TEXTAREA') ajusterHauteur(e.target);
   rendre();
 });
 
@@ -157,11 +182,78 @@ function ajouterLigne(redessiner = true) {
 
 $('#btn-ajouter').addEventListener('click', () => ajouterLigne());
 
+// « Nouvelle facture » : on vide seulement les sections Client, Facture
+// et Lignes. L'\u00e9metteur (logo, coordonn\u00e9es, num\u00e9ros de taxes), les taux
+// de taxes et les notes sont conserv\u00e9s : ils changent rarement.
 $('#btn-reset').addEventListener('click', () => {
-  if (!confirm('Effacer la facture en cours ?')) return;
-  localStorage.removeItem('factureflash');
-  location.reload();
+  if (!confirm('Vider les sections Client, Facture et Lignes ?\n\nVos informations d\u2019\u00e9metteur seront conserv\u00e9es.')) return;
+
+  // Section Client
+  facture.clientNom = '';
+  facture.clientInfos = '';
+
+  // Section Facture
+  facture.numero = numeroSuivant(facture.numero);
+  facture.date = new Date().toISOString().slice(0, 10);
+
+  // Section Lignes : une seule ligne vide
+  facture.lignes = [{ description: '', quantite: 1, prix: 0 }];
+
+  remplirFormulaire();       // remet les champs du formulaire \u00e0 jour
+  rendreFormulaireLignes();
+  rendre();
 });
+
+/**
+ * Incr\u00e9mente le dernier nombre trouv\u00e9 dans le num\u00e9ro de facture,
+ * en conservant les z\u00e9ros de t\u00eate.  « F-0007 » devient « F-0008 ».
+ * Si aucun nombre n'est trouv\u00e9, on retourne le num\u00e9ro tel quel.
+ */
+function numeroSuivant(numero) {
+  return String(numero || '').replace(/(\d+)(?!.*\d)/, (chiffres) => {
+    const suivant = String(Number(chiffres) + 1);
+    // padStart rajoute les z\u00e9ros pour garder la m\u00eame longueur qu'avant
+    return suivant.padStart(chiffres.length, '0');
+  });
+}
+
+// --- Import du logo ---
+// FileReader lit le fichier choisi et le convertit en "data URL" :
+// une longue chaîne de texte (data:image/png;base64,...) qu'on peut
+// mettre dans un <img src> et stocker dans localStorage.
+$('#logo-input').addEventListener('change', (e) => {
+  const fichier = e.target.files[0];
+  if (!fichier) return;
+
+  if (fichier.size > 1_000_000) {
+    alert('Image trop lourde (max 1 Mo). Choisissez une version plus légère.');
+    e.target.value = '';
+    return;
+  }
+
+  const lecteur = new FileReader();
+  lecteur.onload = () => {
+    facture.logo = lecteur.result;
+    rendreLogoFormulaire();
+    rendre();
+  };
+  lecteur.readAsDataURL(fichier);
+});
+
+$('#logo-retirer').addEventListener('click', () => {
+  facture.logo = '';
+  $('#logo-input').value = '';
+  rendreLogoFormulaire();
+  rendre();
+});
+
+/** Affiche ou cache la vignette du logo dans le formulaire. */
+function rendreLogoFormulaire() {
+  const vignette = $('#logo-apercu');
+  vignette.hidden = !facture.logo;
+  if (facture.logo) vignette.src = facture.logo;
+  $('#logo-retirer').hidden = !facture.logo;
+}
 
 
 // -----------------------------------------------------------
@@ -186,20 +278,8 @@ async function capturer() {
   });
 }
 
-/** Déclenche le téléchargement d'une URL de données. */
-function telecharger(url, nom) {
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = nom;
-  a.click();
-}
-
-$('#btn-jpeg').addEventListener('click', async () => {
-  const canvas = await capturer();
-  telecharger(canvas.toDataURL('image/jpeg', 0.95), nomFichier('jpg'));
-});
-
-$('#btn-pdf').addEventListener('click', async () => {
+/** Construit le PDF et le retourne sous forme de Blob (fichier en mémoire). */
+async function construirePdf() {
   const canvas = await capturer();
   const image = canvas.toDataURL('image/jpeg', 0.95);
 
@@ -212,7 +292,59 @@ $('#btn-pdf').addEventListener('click', async () => {
   const hauteurImage = (canvas.height / canvas.width) * largeurPage;
 
   pdf.addImage(image, 'JPEG', 0, 0, largeurPage, hauteurImage);
-  pdf.save(nomFichier('pdf'));
+  return pdf.output('blob');
+}
+
+/** Construit le JPEG et le retourne sous forme de Blob. */
+async function construireJpeg() {
+  const canvas = await capturer();
+  return new Promise((resoudre) => canvas.toBlob(resoudre, 'image/jpeg', 0.95));
+}
+
+/** Déclenche le téléchargement d'un Blob. */
+function telecharger(blob, nom) {
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = nom;
+  a.click();
+  URL.revokeObjectURL(url); // on libère la mémoire
+}
+
+$('#btn-jpeg').addEventListener('click', async () => {
+  telecharger(await construireJpeg(), nomFichier('jpg'));
+});
+
+$('#btn-pdf').addEventListener('click', async () => {
+  telecharger(await construirePdf(), nomFichier('pdf'));
+});
+
+// --- Partage natif ---
+// navigator.share ouvre le menu de partage du téléphone
+// (courriel, Messenger, AirDrop, WhatsApp…).
+// Disponible seulement en HTTPS et surtout sur mobile.
+$('#btn-partager').addEventListener('click', async () => {
+  const blob = await construirePdf();
+  const fichier = new File([blob], nomFichier('pdf'), { type: 'application/pdf' });
+
+  // canShare vérifie que l'appareil accepte de partager des fichiers
+  if (navigator.canShare && navigator.canShare({ files: [fichier] })) {
+    try {
+      await navigator.share({
+        files: [fichier],
+        title: `Facture ${facture.numero}`,
+        text: `Facture ${facture.numero}${facture.emetteurNom ? ' — ' + facture.emetteurNom : ''}`
+      });
+    } catch (err) {
+      // L'utilisateur a fermé le menu : ce n'est pas une erreur.
+      if (err.name !== 'AbortError') console.warn('Partage échoué :', err);
+    }
+    return;
+  }
+
+  // Solution de repli (ordinateur de bureau) : on télécharge le fichier.
+  alert("Le partage n'est pas disponible sur cet appareil. Le PDF va être téléchargé.");
+  telecharger(blob, nomFichier('pdf'));
 });
 
 
@@ -245,6 +377,7 @@ function remplirFormulaire() {
 // Démarrage
 charger();
 remplirFormulaire();
+rendreLogoFormulaire();
 rendreFormulaireLignes();
 rendre();
 

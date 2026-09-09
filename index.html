@@ -41,12 +41,32 @@
     <section class="panel" aria-label="Saisie">
 
       <h2>Émetteur</h2>
+
+      <!-- Import du logo : le fichier n'est jamais envoyé sur un serveur.
+           Il est lu localement et converti en texte (data URL). -->
+      <div class="logo-zone">
+        <img id="logo-apercu" alt="" hidden />
+        <div class="logo-boutons">
+          <label class="btn" for="logo-input">Importer un logo</label>
+          <input type="file" id="logo-input" accept="image/*" hidden />
+          <button id="logo-retirer" class="btn ghost-dark" type="button" hidden>Retirer</button>
+        </div>
+      </div>
+
       <label>Nom / Entreprise
         <input type="text" data-field="emetteurNom" placeholder="Votre entreprise inc." />
       </label>
       <label>Coordonnées
         <textarea data-field="emetteurInfos" rows="3" placeholder="Adresse&#10;Téléphone&#10;Courriel"></textarea>
       </label>
+      <div class="row">
+        <label>N° TPS
+          <input type="text" data-field="noTps" placeholder="123456789 RT0001" />
+        </label>
+        <label>N° TVQ
+          <input type="text" data-field="noTvq" placeholder="1234567890 TQ0001" />
+        </label>
+      </div>
 
       <h2>Client</h2>
       <label>Nom du client
@@ -87,6 +107,7 @@
       <div class="actions">
         <button id="btn-pdf" class="btn primary" type="button">Exporter en PDF</button>
         <button id="btn-jpeg" class="btn primary" type="button">Exporter en JPEG</button>
+        <button id="btn-partager" class="btn primary" type="button">Envoyer à…</button>
       </div>
     </section>
 
@@ -98,9 +119,13 @@
     <section class="panel preview-wrap" aria-label="Aperçu">
       <div id="facture" class="facture">
         <div class="f-head">
-          <div>
-            <div class="f-titre">FACTURE</div>
-            <div class="f-num" id="p-numero">F-0001</div>
+          <div class="f-head-gauche">
+            <!-- Le logo importé s'affiche ici, en haut à gauche -->
+            <img id="p-logo" class="f-logo" alt="" hidden />
+            <div>
+              <div class="f-titre">FACTURE</div>
+              <div class="f-num" id="p-numero">F-0001</div>
+            </div>
           </div>
           <div class="f-date">Date : <span id="p-date">—</span></div>
         </div>
@@ -110,6 +135,7 @@
             <div class="f-label">De</div>
             <div class="f-nom" id="p-emetteurNom">—</div>
             <div class="f-infos" id="p-emetteurInfos"></div>
+            <div class="f-taxes-no" id="p-nosTaxes"></div>
           </div>
           <div>
             <div class="f-label">Pour</div>
