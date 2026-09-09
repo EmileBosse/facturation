@@ -14,6 +14,12 @@
 
 * { box-sizing: border-box; }
 
+/* L'attribut `hidden` doit toujours l'emporter.
+   Sans cette r\u00e8gle, nos styles `input { display: block }` \u00e9crasent
+   le `display: none` de la feuille de style du navigateur, et les
+   \u00e9l\u00e9ments marqu\u00e9s `hidden` r\u00e9apparaissent. */
+[hidden] { display: none !important; }
+
 body {
   margin: 0;
   font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;

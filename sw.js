@@ -6,7 +6,7 @@
    Change le numéro de version quand tu modifies les fichiers,
    sinon l'ancienne version restera en cache.
    ============================================================ */
-const CACHE = 'factureflash-v3';
+const CACHE = 'factureflash-v4';
 
 const FICHIERS = [
   './',
