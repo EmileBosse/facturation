@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>FactureFlash</title>
+
+  <!-- Couleur de la barre de navigation sur mobile quand l'app est installée -->
+  <meta name="theme-color" content="#0f172a" />
+
+  <!-- Le manifest = la "carte d'identité" de la PWA (nom, icônes, couleurs) -->
+  <link rel="manifest" href="manifest.json" />
+  <link rel="icon" href="icon.svg" type="image/svg+xml" />
+  <link rel="apple-touch-icon" href="icon.svg" />
+
+  <link rel="stylesheet" href="styles.css" />
+
+  <!-- Deux librairies externes :
+       html2canvas : transforme un bout de HTML en image (pour le JPEG)
+       jsPDF       : construit un fichier PDF côté navigateur -->
+  <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
+</head>
+<body>
+
+  <header class="app-bar">
+    <div class="brand">
+      <img src="icon.svg" alt="" width="28" height="28" />
+      <span>Facture<strong>Flash</strong></span>
+    </div>
+    <button id="btn-reset" class="btn ghost" type="button">Nouvelle facture</button>
+  </header>
+
+  <main class="layout">
+
+    <!-- =========================================================
+         COLONNE 1 : LE FORMULAIRE (saisie des données)
+         Chaque champ porte un attribut data-field="..."
+         qui correspond à une clé de l'objet `facture` dans app.js
+         ========================================================= -->
+    <section class="panel" aria-label="Saisie">
+
+      <h2>Émetteur</h2>
+      <label>Nom / Entreprise
+        <input type="text" data-field="emetteurNom" placeholder="Votre entreprise inc." />
+      </label>
+      <label>Coordonnées
+        <textarea data-field="emetteurInfos" rows="3" placeholder="Adresse&#10;Téléphone&#10;Courriel"></textarea>
+      </label>
+
+      <h2>Client</h2>
+      <label>Nom du client
+        <input type="text" data-field="clientNom" placeholder="Client inc." />
+      </label>
+      <label>Coordonnées
+        <textarea data-field="clientInfos" rows="3" placeholder="Adresse&#10;Téléphone"></textarea>
+      </label>
+
+      <h2>Facture</h2>
+      <div class="row">
+        <label>Numéro
+          <input type="text" data-field="numero" placeholder="F-0001" />
+        </label>
+        <label>Date
+          <input type="date" data-field="date" />
+        </label>
+      </div>
+
+      <h2>Lignes</h2>
+      <!-- Les lignes sont générées par JavaScript dans ce conteneur -->
+      <div id="lignes"></div>
+      <button id="btn-ajouter" class="btn" type="button">+ Ajouter une ligne</button>
+
+      <h2>Taxes &amp; notes</h2>
+      <div class="row">
+        <label>TPS (%)
+          <input type="number" step="0.001" data-field="tps" value="5" />
+        </label>
+        <label>TVQ (%)
+          <input type="number" step="0.001" data-field="tvq" value="9.975" />
+        </label>
+      </div>
+      <label>Notes
+        <textarea data-field="notes" rows="2" placeholder="Merci de votre confiance."></textarea>
+      </label>
+
+      <div class="actions">
+        <button id="btn-pdf" class="btn primary" type="button">Exporter en PDF</button>
+        <button id="btn-jpeg" class="btn primary" type="button">Exporter en JPEG</button>
+      </div>
+    </section>
+
+    <!-- =========================================================
+         COLONNE 2 : L'APERÇU
+         C'est exactement ce bloc (#facture) qui sera converti
+         en image puis en PDF. Il se met à jour à chaque frappe.
+         ========================================================= -->
+    <section class="panel preview-wrap" aria-label="Aperçu">
+      <div id="facture" class="facture">
+        <div class="f-head">
+          <div>
+            <div class="f-titre">FACTURE</div>
+            <div class="f-num" id="p-numero">F-0001</div>
+          </div>
+          <div class="f-date">Date : <span id="p-date">—</span></div>
+        </div>
+
+        <div class="f-parties">
+          <div>
+            <div class="f-label">De</div>
+            <div class="f-nom" id="p-emetteurNom">—</div>
+            <div class="f-infos" id="p-emetteurInfos"></div>
+          </div>
+          <div>
+            <div class="f-label">Pour</div>
+            <div class="f-nom" id="p-clientNom">—</div>
+            <div class="f-infos" id="p-clientInfos"></div>
+          </div>
+        </div>
+
+        <table class="f-table">
+          <thead>
+            <tr>
+              <th>Description</th>
+              <th class="num">Qté</th>
+              <th class="num">Prix</th>
+              <th class="num">Total</th>
+            </tr>
+          </thead>
+          <tbody id="p-lignes"></tbody>
+        </table>
+
+        <div class="f-totaux">
+          <div><span>Sous-total</span><span id="p-sousTotal">0,00 $</span></div>
+          <div><span id="p-labelTps">TPS</span><span id="p-mtTps">0,00 $</span></div>
+          <div><span id="p-labelTvq">TVQ</span><span id="p-mtTvq">0,00 $</span></div>
+          <div class="grand"><span>Total</span><span id="p-total">0,00 $</span></div>
+        </div>
+
+        <div class="f-notes" id="p-notes"></div>
+      </div>
+    </section>
+  </main>
+
+  <script src="app.js"></script>
+</body>
+</html>

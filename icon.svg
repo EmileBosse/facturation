@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <!-- Fond arrondi -->
+  <rect width="512" height="512" rx="96" fill="#0f172a"/>
+
+  <!-- Le "reçu" : une feuille avec le bas dentelé -->
+  <path fill="#ffffff"
+        d="M136 96h240v300l-30-22-30 22-30-22-30 22-30-22-30 22-30-22-30 22z"/>
+
+  <!-- Lignes de texte stylisées -->
+  <rect x="172" y="140" width="168" height="18" rx="9" fill="#cbd5e1"/>
+  <rect x="172" y="182" width="112" height="14" rx="7" fill="#e2e8f0"/>
+
+  <!-- L'éclair : rapidité de la facturation -->
+  <path fill="#2563eb" d="M286 214l-96 132h58l-24 96 100-140h-60z"/>
+</svg>
