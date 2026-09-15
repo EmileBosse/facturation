@@ -1,0 +1,38 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <linearGradient id="fond" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#1e3a8a"/>
+      <stop offset="100%" stop-color="#0f2062"/>
+    </linearGradient>
+    <linearGradient id="bleu" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#3b82f6"/>
+      <stop offset="100%" stop-color="#1d4ed8"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Version « maskable » : le système (Android) rogne l'icône selon sa
+       propre forme (cercle, goutte, carré arrondi…).
+       Deux règles : fond pleine page sans coins arrondis, et dessin
+       contenu dans la zone sûre = le cercle central de 80 % (r = 205 px). -->
+  <rect width="512" height="512" fill="url(#fond)"/>
+
+  <!-- Le dessin d'icon.svg, réduit et recentré dans la zone sûre -->
+  <g transform="translate(32.1 40.7) scale(0.78)">
+    <!-- La feuille, avec le coin supérieur droit replié -->
+    <path fill="#ffffff"
+          d="M112 118a26 26 0 0 1 26-26h150l86 86v190a26 26 0 0 1-26 26H138a26 26 0 0 1-26-26z"/>
+    <path fill="url(#bleu)" d="M288 92l86 86h-86z"/>
+
+    <rect x="146" y="130" width="62" height="62" rx="12" fill="url(#bleu)"/>
+    <rect x="146" y="222" width="196" height="24" rx="12" fill="#1e40af"/>
+    <rect x="146" y="266" width="140" height="20" rx="10" fill="#93c5fd"/>
+    <rect x="146" y="304" width="112" height="20" rx="10" fill="#bfdbfe"/>
+
+    <circle cx="358" cy="356" r="104" fill="#0f2062"/>
+    <circle cx="358" cy="356" r="90" fill="url(#bleu)"/>
+    <g fill="none" stroke="#ffffff" stroke-width="17" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M358 292v128"/>
+      <path d="M394 324c0-18-16-26-36-26s-38 10-38 28c0 17 17 24 38 30s40 13 40 31-19 29-40 29-38-9-40-25"/>
+    </g>
+  </g>
+</svg>

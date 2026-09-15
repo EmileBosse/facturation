@@ -54,23 +54,23 @@
       </div>
 
       <label>Nom / Entreprise
-        <input type="text" data-field="emetteurNom" placeholder="Votre entreprise inc." />
+        <input type="text" data-field="emetteurNom" enterkeyhint="next" placeholder="Votre entreprise inc." />
       </label>
       <label>Coordonnées
         <textarea data-field="emetteurInfos" rows="3" placeholder="Adresse&#10;Téléphone&#10;Courriel"></textarea>
       </label>
       <div class="row">
         <label>N° TPS
-          <input type="text" data-field="noTps" placeholder="123456789 RT0001" />
+          <input type="text" data-field="noTps" enterkeyhint="next" placeholder="123456789 RT0001" />
         </label>
         <label>N° TVQ
-          <input type="text" data-field="noTvq" placeholder="1234567890 TQ0001" />
+          <input type="text" data-field="noTvq" enterkeyhint="next" placeholder="1234567890 TQ0001" />
         </label>
       </div>
 
       <h2>Client</h2>
       <label>Nom du client
-        <input type="text" data-field="clientNom" placeholder="Client inc." />
+        <input type="text" data-field="clientNom" enterkeyhint="next" placeholder="Client inc." />
       </label>
       <label>Coordonnées
         <textarea data-field="clientInfos" rows="3" placeholder="Adresse&#10;Téléphone"></textarea>
@@ -79,10 +79,10 @@
       <h2>Facture</h2>
       <div class="row">
         <label>Numéro
-          <input type="text" data-field="numero" placeholder="F-0001" />
+          <input type="text" data-field="numero" enterkeyhint="next" placeholder="F-0001" />
         </label>
         <label>Date
-          <input type="date" data-field="date" />
+          <input type="date" data-field="date" enterkeyhint="next" />
         </label>
       </div>
 
@@ -94,10 +94,10 @@
       <h2>Taxes &amp; notes</h2>
       <div class="row">
         <label>TPS (%)
-          <input type="number" step="0.001" data-field="tps" value="5" />
+          <input type="number" step="0.001" data-field="tps" enterkeyhint="next" value="5" />
         </label>
         <label>TVQ (%)
-          <input type="number" step="0.001" data-field="tvq" value="9.975" />
+          <input type="number" step="0.001" data-field="tvq" enterkeyhint="next" value="9.975" />
         </label>
       </div>
       <label>Notes

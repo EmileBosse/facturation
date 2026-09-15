@@ -1,6 +1,6 @@
 {
-  "name": "FactureFlash — Facturation rapide",
-  "short_name": "FactureFlash",
+  "name": "Facture+ — Facturation rapide",
+  "short_name": "Facture+",
   "description": "Créez des factures et exportez-les en PDF ou JPEG, même hors ligne.",
   "start_url": "index.html",
   "scope": ".",
@@ -14,6 +14,12 @@
       "sizes": "any",
       "type": "image/svg+xml",
       "purpose": "any"
+    },
+    {
+      "src": "icon-maskable.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "maskable"
     }
   ]
 }

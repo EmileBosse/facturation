@@ -1,5 +1,5 @@
 /* ============================================================
-   FactureFlash — logique de l'application
+   Facture+ — logique de l'application
    Structure du fichier :
      1. L'état (les données)
      2. Le rendu (afficher l'état à l'écran)
@@ -70,9 +70,9 @@ function rendreFormulaireLignes() {
     div.className = 'ligne';
     // La description est un <textarea> : texte libre sur plusieurs lignes.
     div.innerHTML = `
-      <textarea rows="1" placeholder="Description" data-ligne="${index}" data-prop="description"></textarea>
-      <input type="number" placeholder="Qté"  step="0.01" data-ligne="${index}" data-prop="quantite">
-      <input type="number" placeholder="Prix" step="0.01" data-ligne="${index}" data-prop="prix">
+      <textarea rows="1" placeholder="Description" enterkeyhint="next" data-ligne="${index}" data-prop="description"></textarea>
+      <input type="number" placeholder="Qté"  step="0.01" enterkeyhint="next" data-ligne="${index}" data-prop="quantite">
+      <input type="number" placeholder="Prix" step="0.01" enterkeyhint="next" data-ligne="${index}" data-prop="prix">
       <button class="supprimer" type="button" data-supprimer="${index}" title="Supprimer">&times;</button>
     `;
     // On assigne les valeurs en JS (et non dans le HTML) pour éviter
@@ -181,6 +181,36 @@ function ajouterLigne(redessiner = true) {
 }
 
 $('#btn-ajouter').addEventListener('click', () => ajouterLigne());
+
+// --- Touche « Entrée » = passer au champ suivant ---
+// Sur mobile, le clavier affiche « Suivant » (enterkeyhint) au lieu de « Retour ».
+// Exception : les zones de texte multilignes, où Entrée doit rester un saut de ligne.
+const CHAMPS_MULTILIGNES = new Set(['emetteurInfos', 'clientInfos', 'notes']);
+
+/** Tous les champs de saisie du formulaire, dans l'ordre du document. */
+function champsSaisie() {
+  return [...document.querySelectorAll('.panel [data-field], .panel [data-ligne]')];
+}
+
+document.addEventListener('keydown', (e) => {
+  if (e.key !== 'Enter' || e.shiftKey) return; // Maj+Entrée : saut de ligne forcé
+
+  const champ = e.target;
+  const estChamp = champ.dataset.field !== undefined || champ.dataset.ligne !== undefined;
+  if (!estChamp || CHAMPS_MULTILIGNES.has(champ.dataset.field)) return;
+
+  e.preventDefault(); // empêche le saut de ligne dans les <textarea>
+
+  const champs = champsSaisie();
+  const suivant = champs[champs.indexOf(champ) + 1];
+  if (!suivant) { champ.blur(); return; } // dernier champ : on ferme le clavier
+
+  suivant.focus();
+  if (suivant.tagName === 'TEXTAREA' || suivant.type === 'text' || suivant.type === 'number') {
+    suivant.select();
+  }
+  suivant.scrollIntoView({ block: 'center', behavior: 'smooth' });
+});
 
 // « Nouvelle facture » : on vide seulement les sections Client, Facture
 // et Lignes. L'\u00e9metteur (logo, coordonn\u00e9es, num\u00e9ros de taxes), les taux
@@ -330,10 +360,11 @@ $('#btn-partager').addEventListener('click', async () => {
   // canShare vérifie que l'appareil accepte de partager des fichiers
   if (navigator.canShare && navigator.canShare({ files: [fichier] })) {
     try {
+      // Pas de propriété `text` : elle remplirait le corps du courriel.
+      // `title` sert uniquement d'objet du message.
       await navigator.share({
         files: [fichier],
-        title: `Facture ${facture.numero}`,
-        text: `Facture ${facture.numero}${facture.emetteurNom ? ' — ' + facture.emetteurNom : ''}`
+        title: `Facture ${facture.numero}`
       });
     } catch (err) {
       // L'utilisateur a fermé le menu : ce n'est pas une erreur.
@@ -352,13 +383,16 @@ $('#btn-partager').addEventListener('click', async () => {
 // 5. SAUVEGARDE LOCALE + SERVICE WORKER
 // -----------------------------------------------------------
 
+const CLE_SAUVEGARDE = 'facture-plus';
+
 /** localStorage ne stocke que du texte : on sérialise en JSON. */
 function sauvegarder() {
-  localStorage.setItem('factureflash', JSON.stringify(facture));
+  localStorage.setItem(CLE_SAUVEGARDE, JSON.stringify(facture));
 }
 
 function charger() {
-  const brut = localStorage.getItem('factureflash');
+  // 'factureflash' : ancienne clé, conservée pour ne pas perdre les données existantes.
+  const brut = localStorage.getItem(CLE_SAUVEGARDE) || localStorage.getItem('factureflash');
   if (!brut) return;
   try {
     facture = { ...facture, ...JSON.parse(brut) };

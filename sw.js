@@ -6,7 +6,7 @@
    Change le numéro de version quand tu modifies les fichiers,
    sinon l'ancienne version restera en cache.
    ============================================================ */
-const CACHE = 'factureflash-v4';
+const CACHE = 'facture-plus-v5';
 
 const FICHIERS = [
   './',
@@ -14,6 +14,7 @@ const FICHIERS = [
   './styles.css',
   './app.js',
   './icon.svg',
+  './icon-maskable.svg',
   './manifest.json',
   'https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js',
   'https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js'
