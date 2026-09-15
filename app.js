@@ -113,20 +113,29 @@ function rendreApercu() {
   $('#p-clientNom').textContent = facture.clientNom || '—';
   $('#p-clientInfos').textContent = facture.clientInfos;
 
-  // Les lignes du tableau
-  $('#p-lignes').innerHTML = facture.lignes
-    .map((l) => {
-      const total = (Number(l.quantite) || 0) * (Number(l.prix) || 0);
-      const desc = (l.description || '—')
-        .replace(/&/g, '&amp;').replace(/</g, '&lt;'); // sécurité : on neutralise le HTML
-      return `<tr>
-        <td>${desc}</td>
-        <td class="num">${Number(l.quantite) || 0}</td>
-        <td class="num">${argent(l.prix)}</td>
-        <td class="num">${argent(total)}</td>
-      </tr>`;
-    })
-    .join('');
+  // Les lignes du tableau. On construit les cellules avec textContent :
+  // aucune chaîne saisie n'est interprétée comme du HTML.
+  const corps = $('#p-lignes');
+  corps.textContent = '';
+
+  facture.lignes.forEach((l) => {
+    const total = (Number(l.quantite) || 0) * (Number(l.prix) || 0);
+    const tr = document.createElement('tr');
+
+    [
+      [l.description || '—', ''],
+      [String(Number(l.quantite) || 0), 'num'],
+      [argent(l.prix), 'num'],
+      [argent(total), 'num']
+    ].forEach(([texte, classe]) => {
+      const td = document.createElement('td');
+      td.className = classe;
+      td.textContent = texte; // les retours à la ligne sont rendus par white-space: pre-line
+      tr.appendChild(td);
+    });
+
+    corps.appendChild(tr);
+  });
 
   $('#p-labelTps').textContent = `TPS (${facture.tps || 0} %)`;
   $('#p-labelTvq').textContent = `TVQ (${facture.tvq || 0} %)`;
@@ -311,17 +320,43 @@ async function capturer() {
 /** Construit le PDF et le retourne sous forme de Blob (fichier en mémoire). */
 async function construirePdf() {
   const canvas = await capturer();
-  const image = canvas.toDataURL('image/jpeg', 0.95);
 
   // jsPDF est exposé dans window.jspdf par la version UMD
   const { jsPDF } = window.jspdf;
   const pdf = new jsPDF({ unit: 'mm', format: 'a4', orientation: 'portrait' });
 
-  const largeurPage = 210;
-  // On garde les proportions de l'image capturée
-  const hauteurImage = (canvas.height / canvas.width) * largeurPage;
+  const LARGEUR_MM = 210;
+  const HAUTEUR_MM = 297;
 
-  pdf.addImage(image, 'JPEG', 0, 0, largeurPage, hauteurImage);
+  // Hauteur d'une page A4 traduite en pixels de la capture,
+  // en gardant le même rapport largeur/hauteur.
+  const hauteurPage = Math.floor(canvas.width * HAUTEUR_MM / LARGEUR_MM);
+  const nbPages = Math.max(1, Math.ceil(canvas.height / hauteurPage));
+
+  // Canevas tampon : on y recopie une tranche de la capture par page.
+  const tranche = document.createElement('canvas');
+  tranche.width = canvas.width;
+
+  for (let i = 0; i < nbPages; i++) {
+    const depart = i * hauteurPage;
+    const hauteur = Math.min(hauteurPage, canvas.height - depart);
+
+    tranche.height = hauteur; // redimensionner efface le canevas et remet le contexte à zéro
+    const ctx = tranche.getContext('2d');
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(0, 0, tranche.width, hauteur);
+    ctx.drawImage(canvas, 0, depart, canvas.width, hauteur, 0, 0, canvas.width, hauteur);
+
+    if (i > 0) pdf.addPage();
+    pdf.addImage(
+      tranche.toDataURL('image/jpeg', 0.95),
+      'JPEG',
+      0, 0,
+      LARGEUR_MM,
+      hauteur * LARGEUR_MM / canvas.width
+    );
+  }
+
   return pdf.output('blob');
 }
 

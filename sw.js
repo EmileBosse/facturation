@@ -6,7 +6,7 @@
    Change le numéro de version quand tu modifies les fichiers,
    sinon l'ancienne version restera en cache.
    ============================================================ */
-const CACHE = 'facture-plus-v5';
+const CACHE = 'facture-plus-v6';
 
 const FICHIERS = [
   './',
