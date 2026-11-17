@@ -317,6 +317,15 @@ async function capturer() {
   });
 }
 
+/** Vrai si la zone du canevas ne contient que du blanc (ou presque). */
+function estBlanc(ctx, largeur, hauteur) {
+  const pixels = ctx.getImageData(0, 0, largeur, hauteur).data;
+  for (let p = 0; p < pixels.length; p += 4) {
+    if (pixels[p] < 250 || pixels[p + 1] < 250 || pixels[p + 2] < 250) return false;
+  }
+  return true;
+}
+
 /** Construit le PDF et le retourne sous forme de Blob (fichier en mémoire). */
 async function construirePdf() {
   const canvas = await capturer();
@@ -331,11 +340,17 @@ async function construirePdf() {
   // Hauteur d'une page A4 traduite en pixels de la capture,
   // en gardant le même rapport largeur/hauteur.
   const hauteurPage = Math.floor(canvas.width * HAUTEUR_MM / LARGEUR_MM);
-  const nbPages = Math.max(1, Math.ceil(canvas.height / hauteurPage));
+
+  // La facture fait 297 mm de haut, mais les arrondis en pixels donnent
+  // souvent une capture de 1 ou 2 px plus haute qu'une page : sans
+  // tolérance, on obtenait une 2e page vide. On ignore donc ce surplus.
+  const TOLERANCE = Math.ceil(hauteurPage * 0.01);
+  const nbPages = Math.max(1, Math.ceil((canvas.height - TOLERANCE) / hauteurPage));
 
   // Canevas tampon : on y recopie une tranche de la capture par page.
   const tranche = document.createElement('canvas');
   tranche.width = canvas.width;
+  let pagesAjoutees = 0;
 
   for (let i = 0; i < nbPages; i++) {
     const depart = i * hauteurPage;
@@ -347,7 +362,12 @@ async function construirePdf() {
     ctx.fillRect(0, 0, tranche.width, hauteur);
     ctx.drawImage(canvas, 0, depart, canvas.width, hauteur, 0, 0, canvas.width, hauteur);
 
-    if (i > 0) pdf.addPage();
+    // Une page suivante entièrement blanche (ex. : seulement la marge du bas
+    // qui déborde) ne sert à rien : on ne l'ajoute pas.
+    if (i > 0 && estBlanc(ctx, tranche.width, hauteur)) continue;
+
+    if (pagesAjoutees > 0) pdf.addPage();
+    pagesAjoutees++;
     pdf.addImage(
       tranche.toDataURL('image/jpeg', 0.95),
       'JPEG',

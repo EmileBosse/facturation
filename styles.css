@@ -266,3 +266,38 @@ input:focus, textarea:focus {
   color: var(--muted);
   white-space: pre-line;
 }
+
+/* ============================================================
+   IMPRESSION (Ctrl+P / Imprimer)
+   On n'imprime que la facture, sans la barre ni le formulaire.
+   La marge de la page est gérée par le padding de .facture,
+   et on retire min-height: 297mm qui, ajouté aux marges de
+   l'imprimante, débordait sur une 2e page vide.
+   ============================================================ */
+@page {
+  size: A4;
+  margin: 0;
+}
+
+@media print {
+  html, body { background: #fff; }
+  .app-bar,
+  .layout > .panel:not(.preview-wrap) { display: none !important; }
+
+  .layout { display: block; padding: 0; gap: 0; }
+  .panel { padding: 0; box-shadow: none; border-radius: 0; }
+  .preview-wrap { overflow: visible; }
+
+  .facture {
+    width: 100%;
+    min-height: 0;
+    margin: 0;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  /* Facture longue : ne pas couper une ligne ni le bloc des totaux en deux */
+  .f-table tr,
+  .f-totaux { break-inside: avoid; }
+  .f-table thead { display: table-header-group; }
+}
